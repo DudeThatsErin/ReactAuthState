@@ -1,6 +1,6 @@
 # React Counter Demo App
 
-IMG
+![image](https://github.com/user-attachments/assets/13d58503-3d6c-4479-8b39-16b1f4f69fb9)
 
 [View an online demo here!](https://erinskidds.com/reactcounter/)
 
