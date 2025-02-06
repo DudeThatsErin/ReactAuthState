@@ -1,3 +1,7 @@
 <resources>
+<<<<<<< HEAD
     <string name="app_name">AuthApp</string>
+=======
+    <string name="app_name">CounterApp</string>
+>>>>>>> 1a5d365525d6312a80d3dc22b58eaedd8a956cc2
 </resources>

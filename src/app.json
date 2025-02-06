@@ -1,4 +1,9 @@
 {
+<<<<<<< HEAD
   "name": "AuthApp",
   "displayName": "AuthApp"
+=======
+  "name": "CounterApp",
+  "displayName": "CounterApp"
+>>>>>>> 1a5d365525d6312a80d3dc22b58eaedd8a956cc2
 }

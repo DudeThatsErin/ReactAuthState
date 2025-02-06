@@ -1,65 +1,11 @@
-<<<<<<< HEAD
-import React, { useContext } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import { AuthProvider, AuthContext } from './context/AuthContext';
-import LoginScreen from './screens/LoginScreen';
-import RegisterScreen from './screens/RegisterScreen';
-import HomeScreen from './screens/HomeScreen';
-
-export type RootStackParamList = {
-  Home: { message: string }; // Define the Home screen to expect a 'message' parameter
-  Register: undefined;
-  Login: undefined;
-  Account: { message: string };
-};
-
-const Stack = createStackNavigator<RootStackParamList>();
-
-const AppNavigator: React.FC = () => {
-  const context = useContext(AuthContext);
-
-  if (!context) {
-    return null;
-  }
-
-  const { user } = context;
-
-  return (
-    <Stack.Navigator>
-      {user ? (
-        <Stack.Screen name="Home" component={HomeScreen} />
-      ) : (
-        <>
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Register" component={RegisterScreen} />
-        </>
-      )}
-    </Stack.Navigator>
-  );
-};
-
-const App: React.FC = () => {
-  return (
-    <AuthProvider>
-      <NavigationContainer>
-        <AppNavigator />
-      </NavigationContainer>
-    </AuthProvider>
-  );
-};
-
-export default App;
-=======
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage/lib/module/AsyncStorage.js';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const STORAGE_KEY = 'counter_value'; // Key for AsyncStorage
 
 const App: React.FC = () => {
   const [count, setCount] = useState<number>(0);
-  const { width } = Dimensions.get('window'); // Get screen width
 
   // Load stored count from AsyncStorage
   useEffect(() => {
@@ -106,12 +52,16 @@ const App: React.FC = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.counterText}>Count: {count}</Text>
-      <View style={[styles.buttonContainer, { flexDirection: width > 600 ? 'row' : 'column' }]}>
-        {[1, 2, 5, 10, 15, 20, 50, 100].map((value) => (
-          <TouchableOpacity key={value} style={[styles.button, { width: width > 600 ? 80 : '80%' }]} onPress={() => increment(value)}>
-            <Text style={styles.buttonText}>+{value}</Text>
-          </TouchableOpacity>
-        ))}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={() => increment(1)}>
+          <Text style={styles.buttonText}>+1</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={() => increment(2)}>
+          <Text style={styles.buttonText}>+2</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={() => increment(5)}>
+          <Text style={styles.buttonText}>+5</Text>
+        </TouchableOpacity>
       </View>
       <TouchableOpacity style={styles.resetButton} onPress={resetCounter}>
         <Text style={styles.resetButtonText}>Restart Counter</Text>
@@ -134,18 +84,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   buttonContainer: {
+    flexDirection: 'row',
     marginBottom: 20,
-    alignItems: 'center', // Center buttons on mobile
-    flexWrap: 'wrap', // Wrap buttons on smaller screens
   },
   button: {
     backgroundColor: '#007AFF',
     padding: 15,
     borderRadius: 10,
     marginHorizontal: 10,
-    marginBottom: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   buttonText: {
     color: '#fff',
@@ -165,4 +111,3 @@ const styles = StyleSheet.create({
 });
 
 export default App;
->>>>>>> 1a5d365525d6312a80d3dc22b58eaedd8a956cc2

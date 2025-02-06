@@ -14,7 +14,11 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
+<<<<<<< HEAD
 target 'AuthApp' do
+=======
+target 'CounterApp' do
+>>>>>>> 1a5d365525d6312a80d3dc22b58eaedd8a956cc2
   config = use_native_modules!
 
   use_react_native!(

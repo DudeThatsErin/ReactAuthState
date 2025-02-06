@@ -77,9 +77,15 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
+<<<<<<< HEAD
     namespace "com.authapp"
     defaultConfig {
         applicationId "com.authapp"
+=======
+    namespace "com.counterapp"
+    defaultConfig {
+        applicationId "com.counterapp"
+>>>>>>> 1a5d365525d6312a80d3dc22b58eaedd8a956cc2
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
