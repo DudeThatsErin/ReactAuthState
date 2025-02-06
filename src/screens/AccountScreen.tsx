@@ -1,95 +1,196 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  StyleSheet, 
+  SafeAreaView, 
+  ScrollView,
+  ActivityIndicator 
+} from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../App';
+import storage from '../utils/storage';
 
-type AccountScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Account'>;
-type AccountScreenRouteProp = RouteProp<RootStackParamList, 'Account'>;
+type Props = {
+  route: RouteProp<RootStackParamList, 'Account'>;
+  navigation: StackNavigationProp<RootStackParamList, 'Account'>;
+};
 
-interface Props {
-  navigation: AccountScreenNavigationProp;
-  route: AccountScreenRouteProp;
-}
-
-const AccountScreen: React.FC<Props> = ({ navigation, route }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+const AccountScreen: React.FC<Props> = ({ route, navigation }) => {
+  const [currentUsername, setCurrentUsername] = useState(route.params?.username || '');
+  const [newUsername, setNewUsername] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState(route.params?.message || '');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleUpdate = async () => {
+  const handleChangeUsername = async () => {
     try {
-      const response = await fetch('https://erinskidds.com/reactauthstatedemo/api/updateProfile.php', {
+      if (!newUsername) {
+        setErrorMessage('Please enter a new username');
+        return;
+      }
+
+      setIsLoading(true);
+      setErrorMessage('');
+      setSuccessMessage('');
+
+      const requestBody = {
+        currentUsername: currentUsername,
+        newUsername: newUsername
+      };
+
+      console.log('Sending request:', requestBody);
+
+      const response = await fetch('https://erinskidds.com/reactauthstatedemo/api/update_username.php', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ username, password, newPassword }),
+        body: JSON.stringify(requestBody)
       });
 
       const data = await response.json();
+      console.log('Username update response:', data);
 
-      if (data.success) {
-        setSuccessMessage('Profile updated successfully!');
+      if (data.message === 'Username updated successfully') {
+        setCurrentUsername(newUsername);
+        setNewUsername('');
+        setSuccessMessage('Username updated successfully');
+        navigation.setParams({ username: newUsername });
       } else {
-        setErrorMessage(data.message || 'Update failed');
+        setErrorMessage(data.error || 'Failed to update username');
       }
     } catch (error) {
       console.error('Error:', error);
       setErrorMessage('An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    try {
+      setIsLoading(true);
+      setErrorMessage('');
+      setSuccessMessage('');
+
+      const response = await fetch('https://erinskidds.com/reactauthstatedemo/api/update_password.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: currentUsername,
+          currentPassword,
+          newPassword
+        })
+      });
+
+      const data = await response.json();
+      console.log('Password update response:', data);
+
+      if (data.success) {
+        setCurrentPassword('');
+        setNewPassword('');
+        setSuccessMessage('Password updated successfully');
+      } else {
+        setErrorMessage(data.error || 'Failed to update password');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setErrorMessage('An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleDeleteAccount = async () => {
     try {
-      const response = await fetch('https://erinskidds.com/reactauthstatedemo/api/deleteAccount.php', {
+      console.log('Proceeding to delete account...');
+      setIsLoading(true);
+
+      const response = await fetch('https://erinskidds.com/reactauthstatedemo/api/delete_account.php', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({
+          username: currentUsername
+        })
       });
 
+      console.log('Response status:', response.status);
+
       const data = await response.json();
+      console.log('Delete response:', data);
 
       if (data.success) {
-        setSuccessMessage('Account deleted successfully.');
-        navigation.navigate('Login'); // Redirect to login after account deletion
+        await storage.removeItem('userToken');
+        navigation.reset({
+          index: 0,
+          routes: [{
+            name: 'Login',
+            params: { message: 'Account successfully deleted' }
+          }]
+        });
       } else {
-        setErrorMessage(data.message || 'Account deletion failed');
+        setErrorMessage(data.error || 'Failed to delete account');
       }
     } catch (error) {
-      console.error('Error:', error);
-      setErrorMessage('An error occurred. Please try again.');
+      console.error('Delete error:', error);
+      setErrorMessage('An error occurred while deleting account');
+    } finally {
+      setIsLoading(false);
     }
   };
 
+
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        style={styles.inner}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.accountCard}>
-            <Text style={styles.header}>Account</Text>
-            {successMessage ? <Text style={styles.successText}>{successMessage}</Text> : null}
-            {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.card}>
+          {isLoading && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color="#0000ff" />
+            </View>
+          )}
+          <Text style={styles.header}>Account Settings</Text>
+          
+          <Text style={styles.label}>Current Username:</Text>
+          <Text style={styles.username}>{currentUsername}</Text>
 
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Change Username</Text>
             <TextInput
               style={styles.input}
               placeholder="New Username"
-              value={username}
-              onChangeText={setUsername}
+              value={newUsername}
+              onChangeText={setNewUsername}
             />
+            <TouchableOpacity 
+              style={[styles.button, isLoading && styles.buttonDisabled]}
+              onPress={handleChangeUsername}
+              disabled={isLoading}
+            >
+              <Text style={styles.buttonText}>
+                {isLoading ? 'Updating...' : 'Update Username'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Change Password</Text>
             <TextInput
               style={styles.input}
               placeholder="Current Password"
               secureTextEntry
-              value={password}
-              onChangeText={setPassword}
+              value={currentPassword}
+              onChangeText={setCurrentPassword}
             />
             <TextInput
               style={styles.input}
@@ -98,15 +199,29 @@ const AccountScreen: React.FC<Props> = ({ navigation, route }) => {
               value={newPassword}
               onChangeText={setNewPassword}
             />
-            <TouchableOpacity style={styles.button} onPress={handleUpdate}>
-              <Text style={styles.buttonText}>Update Profile</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
-              <Text style={styles.deleteButtonText}>Delete Account</Text>
+            <TouchableOpacity 
+              style={[styles.button, isLoading && styles.buttonDisabled]}
+              onPress={handleChangePassword}
+              disabled={isLoading}
+            >
+              <Text style={styles.buttonText}>
+                {isLoading ? 'Updating...' : 'Update Password'}
+              </Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+
+          <TouchableOpacity 
+            style={[styles.deleteButton, isLoading && styles.buttonDisabled]}
+            onPress={handleDeleteAccount}
+            disabled={isLoading}
+          >
+            <Text style={styles.deleteButtonText}>Delete Account</Text>
+          </TouchableOpacity>
+
+          {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
+          {successMessage ? <Text style={styles.success}>{successMessage}</Text> : null}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -114,83 +229,100 @@ const AccountScreen: React.FC<Props> = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
-  },
-  inner: {
-    width: '100%',
-    maxWidth: 400,
-    padding: 16,
-    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
   },
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    padding: 16,
   },
-  accountCard: {
-    width: '100%',
-    padding: 20,
+  card: {
     backgroundColor: '#fff',
     borderRadius: 10,
+    padding: 20,
     shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 8,
-    elevation: 5,
+    shadowRadius: 4,
+    elevation: 3,
   },
   header: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
   },
-  successText: {
-    color: 'green',
-    fontSize: 18,
-    marginBottom: 10,
+  label: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 5,
   },
-  errorText: {
-    color: 'red',
-    fontSize: 14,
+  username: {
+    fontSize: 18,
+    fontWeight: '500',
+    marginBottom: 20,
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sectionHeader: {
+    fontSize: 18,
+    fontWeight: '500',
     marginBottom: 10,
   },
   input: {
-    width: '100%',
-    height: 40,
-    borderColor: '#ccc',
     borderWidth: 1,
+    borderColor: '#ddd',
     borderRadius: 8,
-    paddingLeft: 10,
-    marginBottom: 20,
-    fontSize: 16,
+    padding: 12,
+    marginBottom: 10,
   },
   button: {
-    width: '100%',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#007AFF',
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',
-    marginBottom: 10,
   },
   buttonText: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '500',
   },
   deleteButton: {
-    width: '100%',
-    backgroundColor: '#f44336',
+    backgroundColor: '#FF3B30',
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',
+    marginTop: 20,
   },
   deleteButtonText: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '500',
   },
+  error: {
+    color: '#FF3B30',
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  success: {
+    color: '#34C759',
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000
+  },
+  buttonDisabled: {
+    opacity: 0.5
+  }
 });
 
 export default AccountScreen;

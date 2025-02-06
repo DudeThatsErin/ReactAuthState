@@ -1,5 +1,8 @@
 # **React Authentication State Demo**
+
 ![image](https://github.com/user-attachments/assets/4be5196b-c719-4bda-bb03-ceac7fcf99e2)
+
+[Demo Link](https://erinskidds.com/reactauthstatedemo/)
 
 ## **Introduction**
 
@@ -9,18 +12,70 @@ The authentication system ensures user data is securely stored and verified thro
 
 ## **Technologies Used**
 
-We’ve utilized the following technologies for this project:
+We've utilized the following technologies for this project:
 
-- **React**: A JavaScript library for building user interfaces. It allows us to create a dynamic and responsive app with reusable components.
-- **React Native Web**: This enables us to use React Native components in the browser, making our app compatible with both mobile and web devices.
-- **SQLite**: A serverless, self-contained SQL database engine used to manage user authentication data locally on the device.
-- **MySQL**: A relational database management system used to store user registration data (username, password, etc.) securely on the server side.
-- **PHP**: Used for server-side scripts to handle API requests like user registration, login, profile updates, and session management.
-- **CORS**: Handling Cross-Origin Resource Sharing (CORS) to allow communication between the frontend (React) and the backend (PHP).
-- **JWT (JSON Web Tokens)**: Used for managing authentication tokens to ensure secure communication between the frontend and the backend.
-- **HTML & CSS**: For structuring and styling the app's user interface.
-- **Babel**: A JavaScript compiler that helps ensure compatibility across browsers by transpiling modern JavaScript syntax.
-- **Fetch API**: Used for making HTTP requests from the frontend to the backend for user authentication and data handling.
+### Frontend
+
+- **React**: JavaScript library for building user interfaces
+- **React Native Web**: Cross-platform compatibility layer
+- **React Navigation**: Navigation library for screen management
+- **TypeScript**: Typed superset of JavaScript
+- **Context API**: State management for authentication
+- **AsyncStorage**: Local storage management
+- **Fetch API**: HTTP request handling
+
+### Backend
+
+- **PHP**: Server-side scripting language
+- **MySQL**: Relational database for user data
+- **PDO**: PHP Data Objects for database connection
+- **BCrypt**: Password hashing
+
+### Development Tools
+
+- **Visual Studio Code**: IDE
+- **Git**: Version control
+- **npm**: Package management
+- **TypeScript Compiler**: Type checking and compilation
+- **ESLint**: Code linting
+- **Prettier**: Code formatting
+
+### Infrastructure
+
+- **Apache**: Web server
+- **CORS**: Cross-Origin Resource Sharing
+- **SSL**: Secure communication layer
+- **REST API**: API architectural style
+
+## **Pages and Routes**
+
+### Authentication Flow
+
+- **Login** (`/login`)
+  - Main login form
+  - Forgot password link
+  - Register account link
+- **Register** (`/register`)
+  - New user registration form
+- **Forgot Password** (`/forgot-password`)
+  - Password reset form
+
+### Protected Routes
+
+- **Account** (`/account`)
+  - Profile management
+  - Change username
+  - Change password
+  - Delete account
+
+### API Endpoints
+
+- `/api/login.php`
+- `/api/register.php`
+- `/api/update_username.php`
+- `/api/update_password.php`
+- `/api/reset_password.php`
+- `/api/delete_account.php`
 
 ## **What This App Does**
 
@@ -30,12 +85,23 @@ We’ve utilized the following technologies for this project:
 - **Session Management**: The app uses JWT for maintaining sessions and ensures that users are redirected if their session has expired.
 - **Mobile & Web Compatibility**: The app works seamlessly across both mobile and desktop browsers, leveraging React Native Web for cross-platform compatibility.
 
+## **Deployment Requirements**
+
+### Server Requirements
+
+- PHP 7.4 or higher
+- MySQL 5.7 or higher
+- Apache web server
+- SSL certificate (for HTTPS)
+
+### Database Setup
+
+1. Create MySQL database
+2. Import schema from `database.sql`
+3. Configure `config.php` with database credentials
+
 ## **Development Timeline**
 
-- **Start Date**: February 5, 2025 at 2:50pm CST
-- **End Date**: February 5, 2025 at 4:30pm CST
-- **Time Taken**: Approximately 90 minutes to develop, debug, and deploy to a shared hosting server.
-
-## **Demo**
-
-View an online demo here: [Demo Link](https://erinskidds.com/reactauthstatedemo/)
+- **Start Date**: February 5, 2025 at 3pm CST
+- **End Date**: February 6, 2025 at 5pm CST
+- **Time Taken**: Approximately 26 hours to develop, debug, and deploy to a shared hosting server.

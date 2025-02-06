@@ -1,21 +1,39 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../App';
+import storage from '../utils/storage';
+import { useAuth } from '../context/AuthContext';
 
-type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
+type Props = {
+  navigation: StackNavigationProp<RootStackParamList, 'Login'>;
+  route: RouteProp<RootStackParamList, 'Login'>;
+};
 
-interface Props {
-  navigation: LoginScreenNavigationProp;
-}
-
-const LoginScreen: React.FC<Props> = ({ navigation }) => {
+const LoginScreen: React.FC<Props> = ({ navigation, route }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string>((route.params && (route.params as { message?: string })?.message) || '');
+  const { setUserToken } = useAuth();
+
+  // Clear success message after 3 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage('');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   const handleLogin = async () => {
     try {
+      setIsLoading(true);
+      setErrorMessage('');
+
       const response = await fetch('https://erinskidds.com/reactauthstatedemo/api/login.php', {
         method: 'POST',
         headers: {
@@ -25,22 +43,33 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       });
 
       const data = await response.json();
+      console.log('Login response:', data);
 
       if (data.success) {
-        // On success, navigate to the Account screen
-        navigation.navigate('Account', { message: 'Successfully logged in!' });
+        await storage.setItem('userToken', data.token || '');
+        setUserToken(data.token || '');
+        navigation.navigate('Account', { username });
+      } else if (data.error === 'User not found') {
+        setErrorMessage('You are not registered yet. Register now?');
+      } else if (data.error === 'Invalid password') {
+        setErrorMessage('Invalid password. Forgot your password?');
       } else {
-        // Handle login failure (e.g., invalid credentials)
-        setErrorMessage(data.message || 'Login failed');
+        setErrorMessage(data.message || 'Invalid credentials');
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Login error:', error);
       setErrorMessage('An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleRegister = () => {
     navigation.navigate('Register');
+  };
+
+  const handleForgotPassword = () => {
+    navigation.navigate('ForgotPassword');
   };
 
   return (
@@ -50,6 +79,9 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.scrollContainer}>
+          {successMessage ? (
+            <Text style={styles.successMessage}>{successMessage}</Text>
+          ) : null}
           <View style={styles.loginCard}>
             <Text style={styles.header}>Login</Text>
             <TextInput
@@ -66,10 +98,36 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
               onChangeText={setPassword}
             />
             {errorMessage ? (
-              <Text style={styles.errorText}>{errorMessage}</Text>
+              <View style={styles.errorContainer}>
+                {errorMessage === 'You are not registered yet. Register now?' ? (
+                  <Text style={styles.errorText}>
+                    You are not registered yet.{' '}
+                    <Text style={styles.registerLink} onPress={handleRegister}>
+                      Register now?
+                    </Text>
+                  </Text>
+                ) : errorMessage === 'Invalid password. Forgot your password?' ? (
+                  <Text style={styles.errorText}>
+                    Invalid password.{' '}
+                    <Text style={styles.forgotPassword} onPress={handleForgotPassword}>
+                      Forgot your password?
+                    </Text>
+                  </Text>
+                ) : (
+                  <Text style={styles.errorText}>{errorMessage}</Text>
+                )}
+              </View>
             ) : null}
-            <TouchableOpacity style={styles.button} onPress={handleLogin}>
-              <Text style={styles.buttonText}>Login</Text>
+            <TouchableOpacity 
+              style={[styles.button, isLoading && styles.buttonDisabled]}
+              onPress={handleLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Login</Text>
+              )}
             </TouchableOpacity>
             <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
               <Text style={styles.registerButtonText}>Don't have an account? Register</Text>
@@ -153,10 +211,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  errorContainer: {
+    marginBottom: 15,
+  },
   errorText: {
     color: 'red',
-    fontSize: 14,
-    marginBottom: 10,
+    marginBottom: 5,
+  },
+  forgotPassword: {
+    color: '#007AFF',
+    textDecorationLine: 'underline',
+  },
+  successMessage: {
+    color: 'green',
+    backgroundColor: '#e8f5e9',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 20,
+    textAlign: 'center',
+    fontSize: 16,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  registerLink: {
+    color: '#007AFF',
+    textDecorationLine: 'underline',
+    marginTop: 5,
   },
 });
 

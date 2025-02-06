@@ -1,68 +1,76 @@
-// Updated RegisterScreen.tsx
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  StyleSheet, 
+  SafeAreaView, 
+  KeyboardAvoidingView, 
+  Platform, 
+  ScrollView 
+} from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../App';
+import storage from '../utils/storage';
 
 type RegisterScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Register'>;
 
-interface Props {
+type Props = {
   navigation: RegisterScreenNavigationProp;
-}
-
-const RegisterScreen: React.FC<Props> = ({ navigation }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-
-  const handleRegister = async () => {
-  if (password !== confirmPassword) {
-    console.log('Passwords do not match');
-    return;
-  }
-
-  try {
-    const response = await fetch('https://erinskidds.com/reactauthstatedemo/api/register.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ username, password }),
-    });
-
-    // Check if the response is OK and has content
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    // Try to parse the response as JSON
-const data = await response.text();  // Get raw response text
-console.log('Raw response:', data);  // Log the raw response to inspect
-
-
-    // If the response is not empty, try parsing it as JSON
-    if (data) {
-      const jsonData = JSON.parse(data);
-      if (jsonData.success) {
-        // On success, navigate to Home with a success message
-        navigation.navigate('Home', { message: 'Success! You are registered, now please login!' });
-      } else {
-        // Handle registration failure
-        setErrorMessage(jsonData.message || 'Registration failed');
-      }
-    } else {
-      throw new Error('Empty response body');
-    }
-  } catch (error) {
-    console.error('Error:', error);
-    setErrorMessage('An error occurred. Please try again.');
-  }
 };
 
+const RegisterScreen: React.FC<Props> = ({ navigation }) => {
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
+
+  const handleRegister = async (): Promise<void> => {
+    try {
+      if (!username || !password) {
+        setErrorMessage('All fields are required');
+        return;
+      }
+
+      console.log('Attempting registration for:', username); // Debug log
+
+      const response = await fetch('https://erinskidds.com/reactauthstatedemo/api/register.php', {
+        method: 'POST',
+        credentials: 'omit',
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ 
+          username, 
+          password 
+        }),
+      });
+
+      const data = await response.json();
+      console.log('Registration response:', response.status, data); // Debug log
+      
+      if (response.status === 409) {
+        setErrorMessage('Username already exists. Please choose another.');
+        return;
+      }
+      
+      if (data.message) {
+        setErrorMessage('');
+        await storage.setItem('userToken', data.token || '');
+        navigation.navigate('Account', { username });
+      } else if (data.error) {
+        setErrorMessage(data.error);
+      }
+
+    } catch (error) {
+      console.error('Error details:', error);
+      setErrorMessage('An error occurred. Please try again.');
+    }
+  };
+
   const handleLogin = () => {
-    // Navigate to Login screen
-    navigation.navigate('Login');
+    navigation.navigate('Login', { message: undefined });
   };
 
   return (

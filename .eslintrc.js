@@ -1,10 +1,12 @@
 module.exports = {
   root: true,
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+  ],
+  parser: '@typescript-eslint/parser',
+  plugins: ['@typescript-eslint'],
   rules: {
-    // Disable all rules
+    'prettier/prettier': 0,
   },
-<<<<<<< HEAD
 };
-=======
-};
->>>>>>> 1a5d365525d6312a80d3dc22b58eaedd8a956cc2
